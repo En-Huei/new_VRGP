@@ -343,6 +343,8 @@ namespace BNG {
         
         public virtual void Shoot() {
 
+            // BulletLauncher.instance.Spawn();
+
             // Has enough time passed between shots
             float shotInterval = Time.timeScale < 1 ? SlowMoRateOfFire : FiringRate;
             if (Time.time - lastShotTime < shotInterval) {
@@ -594,6 +596,8 @@ namespace BNG {
         }       
 
         public virtual void OnWeaponCharged(bool allowCasingEject) {
+
+
 
             // Already bullet in chamber, eject it
             if (BulletInChamber && allowCasingEject) {                
