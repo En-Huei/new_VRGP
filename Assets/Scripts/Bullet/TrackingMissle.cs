@@ -25,6 +25,10 @@ public class TrackingMissle : MonoBehaviour
                 transform.position = Vector3.Lerp(transform.position, target.position, step);
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotation, step);
             }
+            else{
+                // Arrived
+                Destroy(this.gameObject);
+            }
         }
     }
 }
