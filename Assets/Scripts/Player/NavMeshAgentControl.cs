@@ -16,6 +16,7 @@ public enum EnemyState
 public class NavMeshAgentControl : MonoBehaviour
 {
     public Transform targetPlayer;
+    public bool switchStateByDistance = true;
     public float wanderRadius = 5f;
     public float runAwayRadius = 8f;
     public float zoneRadiusSquare = 20f;
@@ -35,24 +36,7 @@ public class NavMeshAgentControl : MonoBehaviour
     }
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit))
-            {
-                state = EnemyState.Follow;
-                agent.SetDestination(hit.point);
-            }
-        }
-        else if ((targetPlayer.position - transform.position).sqrMagnitude < zoneRadiusSquare)
-        {
-            state = EnemyState.RunAway;
-        }
-        else
-        {
-            state = EnemyState.Wander;
-        }
+        DetermineState();
         switch (state)
         {
             case EnemyState.Idle:
@@ -69,6 +53,37 @@ public class NavMeshAgentControl : MonoBehaviour
                 break;
             default:
                 break;
+        }
+    }
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, wanderRadius);
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, runAwayRadius);
+    }
+    void DetermineState()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit))
+            {
+                state = EnemyState.Follow;
+                agent.SetDestination(hit.point);
+            }
+        }
+        if (switchStateByDistance)
+        {
+            if ((targetPlayer.position - transform.position).sqrMagnitude < zoneRadiusSquare)
+            {
+                state = EnemyState.RunAway;
+            }
+            else
+            {
+                state = EnemyState.Wander;
+            }
         }
     }
     void Wander()
