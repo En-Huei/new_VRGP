@@ -11,6 +11,12 @@ namespace BNG {
         [Tooltip("The currently held item. Set this in the editor to equip on Start().")]
         public Grabbable HeldItem;
 
+        [Tooltip("The alternate held item.")]
+        public List<Grabbable> AllHeldItems;
+        public List<GameObject> AllHeldItemObjects;
+        bool CurrentAlternate = false;
+        public int GunLevel = 0;
+
         [Tooltip("TSet this in the editor to equip on Start().")]
         public Grabbable StartingItem;
 
@@ -45,6 +51,8 @@ namespace BNG {
 
         [Tooltip("If true the item inside the SnapZone will be duplicated, instead of removed, from the SnapZone.")]
         public bool DuplicateItemOnGrab = false;
+        public bool UnlimitedDuplication = false;
+        public int DuplicateLimitCount = 5;
 
         /// <summary>
         /// Only snap if Grabbable was dropped maximum of X seconds ago
@@ -151,6 +159,52 @@ namespace BNG {
                     GrabGrabbable(trackedItem);
                 }
             }
+        }
+
+        public void SwitchAlternateItem() {
+            int alternateIndex = 1 + GunLevel;
+            if (CurrentAlternate) {
+                AllHeldItemObjects[alternateIndex].SetActive(false);
+                AllHeldItemObjects[0].SetActive(true);
+                GrabGrabbable(AllHeldItems[0]);
+                HeldItem.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
+                CurrentAlternate = false;
+            } else {
+                AllHeldItemObjects[0].SetActive(false);
+                AllHeldItemObjects[alternateIndex].SetActive(true);
+                GrabGrabbable(AllHeldItems[alternateIndex]);
+                HeldItem.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
+                CurrentAlternate = true;
+            }
+        }
+
+        public void GunUpgrade() {
+            GunLevel++; 
+            if (GunLevel > AllHeldItemObjects.Count - 1) {
+                GunLevel = AllHeldItemObjects.Count - 1;
+            }
+            for (int i = 1; i < AllHeldItemObjects.Count; i++) {
+                if (i == GunLevel + 1) {
+                    AllHeldItemObjects[i].SetActive(true);
+                } else {
+                    AllHeldItemObjects[i].SetActive(false);
+                }
+            }
+            if (CurrentAlternate) {
+                GrabGrabbable(AllHeldItems[GunLevel + 1]);
+                HeldItem.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
+            }
+        }
+
+        public void GunDowngrade() {
+            GunLevel--;
+            if (GunLevel < 0) {
+                GunLevel = 0;
+            }
+        }
+
+        public void UpgradeDuplicateLimitCount() {
+            DuplicateLimitCount = DuplicateLimitCount * 2;
         }
 
         Grabbable getClosestGrabbable() {
@@ -341,7 +395,7 @@ namespace BNG {
                     }
 
                     var g = HeldItem;
-                    if (DuplicateItemOnGrab) {
+                    if (DuplicateItemOnGrab && (UnlimitedDuplication || ( !UnlimitedDuplication && DuplicateLimitCount > 1 ))) {
 
                         ReleaseAll();
 
@@ -359,6 +413,8 @@ namespace BNG {
 
                         // Finish Grabbing the desired object
                         grabber.GrabGrabbable(g);
+
+                        DuplicateLimitCount--;
                     }
                     else {
                         ReleaseAll();
